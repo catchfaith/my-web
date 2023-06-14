@@ -155,6 +155,19 @@ home_banner:
 
 # NAVIGATION BAR >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> start
 navbar:
+  categories:
+  Java: #取名随意
+        icon: fa-solid fa-folder #图标
+        path: /Java/ #链接
+  CSharp: 
+        icon: fa-solid fa-folder #图标
+        path: /CSharp/ #链接
+  Docker: 
+        icon: fa-solid fa-folder #图标
+        path: /Docker/ #链接
+  Sql: 
+        icon: fa-solid fa-folder #图标
+        path: /Sql/ #链接
   # Auto hide navbar
   auto_hide: false
   # Navbar background color
