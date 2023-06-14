@@ -1,9 +1,10 @@
 ---
 title: 记录CSharp获取系统当前时间、当前日期、年月日时分秒等
 date: 2023-06-06 11:07:05
+categories: CSharp
 ---
 
-## CSharp中获取系统当前时间、当前日期、年月日时分秒
+## Test
 **code实例：**
 ``` java
 string st0 = DateTime.Now.ToString();            // "2022/8/25 17:55:01"

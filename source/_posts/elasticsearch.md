@@ -1,5 +1,7 @@
 ---
 title: ElasticSearch笔记
+date: 2023-06-02 13:07:05
+categories: Java
 ---
 ## 什么是Elasticsearch🔥🔥🔥🔥
 elasticsearch是一款非常强大的开源搜索引擎 可以帮我我们从海量数据中快速找到需要的内容。
@@ -317,3 +319,180 @@ DELETE /faith/_doc/1
 **什么是RestClient**
 
 ES官方提供了各种不同语言的客户端，用来操作ES。这些客户端的本质都是组装DSL语句，通过Http请求发给ES
+
+#### 4.1.1 Java中使用RestClient操作
+- 定义MAPPING_TEMPLATE 常量
+``` java
+   //其实这个也就是一串json字符串
+    public static final String MAPPING_TEMPLATE="{\n" +
+            "  \"mappings\": {\n" +
+            "    \"properties\": {\n" +
+            "      \"info\":{\n" +
+            "      \"type\":\"text\",\n" +
+            "      \"analyzer\":\"ik_smart\"\n" +
+            "      },\n" +
+            "      \"email\":{\n" +
+            "      \"type\":\"keyword\",\n" +
+            "      \"index\":false\n" +
+            "    },\n" +
+            "      \"name\":{\n" +
+            "      \"type\":\"object\",\n" +
+            "      \"properties\": {\n" +
+            "        \"firstName\":{\n" +
+            "          \"type\":\"keyword\"\n" +
+            "        },\n" +
+            "        \"lastName\":{\n" +
+            "          \"type\":\"keyword\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "    }\n" +
+            "  }\n" +
+            "}";
+```
+- 使用RestClient创建和删除索引库
+``` java
+    @Test
+    public void addMapping() throws IOException {
+        //System.out.println(client);
+        //连接elasticsearch地址
+        this.client = new RestHighLevelClient(RestClient.builder(new HttpHost("120.79.81.249",9200)));
+        //创建request对象 索引名称是faith
+        CreateIndexRequest request = new CreateIndexRequest("faith");
+        //MAPPING_TEMPLATE是个静态常量
+        request.source(MAPPING_TEMPLATE, XContentType.JSON);
+        //indices 返回的对象包含了索引库操作的所有方法
+        client.indices().create(request, RequestOptions.DEFAULT);
+        this.client.close();
+    }
+    @Test
+   public void deleteMapping() throws IOException {
+        this.client = new RestHighLevelClient(RestClient.builder(new HttpHost("120.79.81.249",9200)));
+        DeleteIndexRequest request = new DeleteIndexRequest("faith");
+        client.indices().delete(request, RequestOptions.DEFAULT);
+        this.client.close();
+    }
+```
+- 使用RestClient 操作文档
+``` java
+   //查询文档
+    @Test
+    public void selectDoc() throws IOException {
+        UserInfo user = new UserInfo(12138L,"faith3Zz",27);
+        this.client = new RestHighLevelClient(RestClient.builder(new HttpHost("120.79.81.249",9200)));
+        GetRequest request = new GetRequest("user","12138");
+        GetResponse documentFields = client.get(request, RequestOptions.DEFAULT);
+        String sourceAsString = documentFields.getSourceAsString();
+        UserInfo userInfo = JSON.parseObject(sourceAsString, UserInfo.class);
+        System.out.println(userInfo);
+        this.client.close();
+    }
+    //更新文档
+    @Test
+    public void updateDoc() throws IOException {
+        this.client = new RestHighLevelClient(RestClient.builder(new HttpHost("120.79.81.249",9200)));
+        UpdateRequest request =new UpdateRequest("user","12138");
+        request.doc(
+                "age",25,
+                "name","evil"
+        );
+        this.client.update(request,RequestOptions.DEFAULT);
+        this.client.close();
+    }
+    //删除文档
+    @Test
+    public void deleteDoc() throws IOException {
+        this.client = new RestHighLevelClient(RestClient.builder(new HttpHost("120.79.81.249",9200)));
+        DeleteRequest request = new DeleteRequest("user","12138");
+        this.client.delete(request,RequestOptions.DEFAULT);
+        this.client.close();
+    }
+```
+### 4.2 爬取京东数据
+>数据问题？数据库获取，消息队列中获取，都可以成为数据源。
+
+爬取数据：（获取请求返回的页面信息，筛选出我们想要的数据就可以了）
+#### 4.2.1 导入jsonp包
+``` xml
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+            <version>1.10.2</version>
+        </dependency>
+```
+
+``` java
+    public static void main(String[] args) throws IOException {
+    StringBuilder sb = new StringBuilder("https://search.jd.com/Search?keyword=%E6%89%8B%E6%9C%BA&page=");
+        for (int i = 1; i < 100; i++) {
+            sb.append("https://search.jd.com/Search?keyword=%E6%89%8B%E6%9C%BA&page="+i);
+            //解析网页(静态html文件)
+            Document document = Jsoup.parse(new URL(sb.toString()), 20000);
+            System.out.println(document);
+            //所有再js中使用的方法再这里都可以使用
+            Element element = document.getElementById("J_goodsList");
+            //获取所有的list元素
+            Elements elements = element.getElementsByTag("li");
+            if (elements == null){
+                continue;
+            }
+            //获取所有li中的内容
+            for (Element el:
+                    elements) {
+                if (el.className().equals("ps-item")){
+                    continue;
+                }
+                //System.out.println(el.html());
+                Goods goods = new Goods();
+                //img属性
+                goods.setUrl(el.getElementsByTag("img").eq(0).attr("data-lazy-img"));
+                String price = el.getElementsByClass("p-price").eq(0).text().replace("￥", "");
+                if (price.contains(" ")){
+                    //price
+                    goods.setPrice(new BigDecimal(price.split(" ")[0]));
+                }else if (price.contains("暂无报价")){
+                    goods.setPrice(new BigDecimal(0.00));
+                }else {
+                    //price
+                    goods.setPrice(new BigDecimal(price));
+                }
+                //title
+                goods.setTitle(el.getElementsByClass("p-name").eq(0).text());
+                //shop
+                goods.setShop(el.getElementsByClass("p-shop").eq(0).text());
+                mapper.insert(goods);
+            }
+            sb.setLength(0);
+        }
+        System.out.println("success!");
+    }
+```
+### 4.3 DSL 查询语法
+#### 4.3.1 **DSL Query的分类**
+Elasticsearch提供了基于JSON的DSL来定义查询。常用的查询类型包括：
+- 查询所有：查询出所有数据，一般用于测试。例如：match_all
+- 全文检索查询：利用分词器对用户输入内容分词，然后倒排索引库中匹配。例如：
+  - match_query
+  - multi_match_query
+- 精确查询：根据精确词条值查找数据，一般是查找keyword、数值、日期、boolean等类型字段。例如
+  - ids
+  - range
+  - term
+- 地理查询：根据经纬度查询：
+  - geo_disrance
+  - geo_bounding_box
+- 复合查询：复合查询可以将上述各种查询条件组合起来，合并查询条件，例如：
+  - bool
+  - function_score
+#### 4.3.2 **DSL QUERY基本语法**
+查询的基本语法如下：
+```java
+GET /indexName/_search
+{
+  "query":{
+    "查询类型":{
+    "查询条件":"条件值"
+    }
+  }
+}
+```
