@@ -1,9 +1,10 @@
 ---
 title: 记录C#获取系统当前时间、当前日期、年月日时分秒等
+date: 2023-06-06 11:07:05
 ---
 
 ## C#获取系统当前时间、当前日期、年月日时分秒
-
+**code实例：**
 ``` C#
 string st0 = DateTime.Now.ToString();            // "2022/8/25 17:55:01"
 string st1 = DateTime.Now.Date.ToString();            // "2022/8/25 0:00:00"
