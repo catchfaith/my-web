@@ -6,7 +6,7 @@ categories: CSharp
 
 ## Test
 **code实例：**
-``` java
+``` C#
 string st0 = DateTime.Now.ToString();            // "2022/8/25 17:55:01"
 string st1 = DateTime.Now.Date.ToString();            // "2022/8/25 0:00:00"
 
