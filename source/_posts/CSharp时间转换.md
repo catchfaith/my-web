@@ -1,5 +1,5 @@
 ---
-title: 记录CSharp获取系统当前时间、当前日期、年月日时分秒等
+title: CSharp常用Date用法
 date: 2023-06-06 11:07:05
 categories: CSharp
 ---
