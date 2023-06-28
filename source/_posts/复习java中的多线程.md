@@ -1,0 +1,388 @@
+---
+title: 复习java中的多线程...
+date: 2022-06-27 10:33:05
+categories: Java
+---
+
+## 1.什么是进程？什么是线程？
+- 进程：一个应用程序（好比windows中任务管理器中一个个软件）
+- 线程：一个进程中的执行场景/执行单元
+
+注意： ***<font color=red>一个进程可以启动多个线程</font>***
+
+对于java程序来说，当在DOS命令窗口中输入：
+java HelloWorld 回车之后。会先启动JVM，而JVM就是一个进程。
+
+JVM再启动一个主线程调用main方法（main方法就是主线程）。
+同时再启动一个垃圾回收线程负责看护，回收垃圾。
+
+最起码，现在的java程序中至少有两个线程并发，一个是 垃圾回收线程，一个是 执行main方法的主线程。
+## 2.进程和线程是什么关系？
+*进程：* 可以看做是现实生活当中的公司。
+
+*线程：* 可以看做是公司当中的某个员工。
+
+注意：
+进程A和进程B的 内存独立不共享。
+
+qq是一个进程
+qq音乐是一个进程
+这两个进程是独立的，不共享资源。
+
+### 2.1 线程A和线程B是什么关系？
+在java语言中：
+
+线程A和线程B，**<font color=red>堆内存 和 方法区 内存共享**</font>。但是 栈内存 独立，一个线程一个栈。
+
+假设启动10个线程，会有10个栈空间，每个栈和每个栈之间，互不干扰，各自执行各自的，这就是多线程并发。
+
+火车站，可以看做是一个进程。
+火车站中的每一个售票窗口可以看做是一个线程。
+我在窗口1购票，你可以在窗口2购票，你不需要等我，我也不需要等你。所以多线程并发可以提高效率。
+
+java中之所以有多线程机制，目的就是为了 提高程序的处理效率。
+
+### 2.2 ??使用了多线程机制之后，main方法结束，是不是有可能程序也不会结束??
+main方法结束只是主线程结束了，主栈空了，其它的栈(线程)可能还在压栈弹栈。
+
+### 2.3 ??对于单核的CPU来说，真的可以做到真正的多线程并发吗??
+对于多核的CPU电脑来说，真正的多线程并发是没问题的。4核CPU表示同一个时间点上，可以真正的有4个进程并发执行。
+
+单核的CPU表示只有一个大脑：
+不能够做到真正的多线程并发，但是可以做到给人一种“多线程并发”的感觉。
+
+对于单核的CPU来说，在某一个时间点上实际上只能处理一件事情，但是由于CPU的处理速度极快，多个线程之间频繁切换执行，给别人的感觉是：多个事情同时在做！！！
+
+线程A：播放音乐
+
+线程B：运行魔兽游戏
+
+线程A和线程B频繁切换执行，人类会感觉音乐一直在播放，游戏一直在运行，
+给我们的感觉是同时并发的。（因为计算机的速度很快，我们人的眼睛很慢，所以才会感觉是多线程！）
+
+### 2.4 ??什么是真正的多线程并发??
+t1线程执行t1的。
+
+t2线程执行t2的。
+
+t1不会影响t2，t2也不会影响t1。这叫做真正的多线程并发。
+
+### 3. 线程的声明周期🔥🔥🔥🔥
+
+- 1.新建状态
+- 2.就绪状态
+- 3.运行状态
+- 4.阻塞状态
+- 5.死亡状态
+
+![Test](/images/thread01.png)
+
+### 4. java 中实现线程的两种方式
+#### 4.1 编写类 继承java.lang.Thread 重写run方法
+MyThread类
+
+``` java
+    /**
+ * @description:
+ * @author:faith
+ * @time:2023/6/28 13:28
+ */
+public class MyThread extends Thread{
+    @Override
+    public void run(){
+        for (int i = 0; i < 1000; i++) {
+            System.out.println("分支线程--->"+i);
+        }
+
+    }
+}
+```
+App类
+``` java
+/**
+ * Hello world!
+ *
+ */
+public class App 
+{
+    public static void main( String[] args )
+    {
+       MyThread t=new MyThread();
+        //不会启动线程 不会分配新的分支栈（单线程）
+        t.run();
+       // t.start();
+       //主线程
+        for (int i = 0; i < 1000; i++) {
+            System.out.println("主线程---->"+i);
+        }
+    }
+}
+```
+
+***<font color=red>注意</font>***
+- t.run() 只是个普通方法的调用，***不会分配新的分支栈是单线程***
+- t.start() 方法的作用：启动一个分支线程，***再JVM中开辟一个新的栈空间***，这段代码任务完成之后，就结束了
+这段代码的任务就是为了开启一个新的栈空间，只要新的栈空间开出来，start()方法就结束了。线程就启动成功了。启动成功的线程就会自己调用run()方法，并且run()方法的分支栈的栈底部（压栈）。run()方法再分支栈的底部，main方法再主栈的栈底部。run和main是平级的。
+
+#### 4.2 编写类实现java.lang.Runnable接口，实现run方法
+
+MyRunnable类
+``` java
+/**
+ * @description:
+ * @author:faith
+ * @time:2023/6/28 14:00
+ */
+// 这并不是一个线程类，是一个可运行的类。它还不是一个线程
+public class MyRunnable implements Runnable{
+    @Override
+    public void run() {
+        for (int i = 0; i < 1000; i++) {
+            System.out.println("分支线程--->"+i);
+        }
+    }
+}
+```
+
+Main类
+``` java
+package com.faith;
+
+/**
+ * Hello world!
+ *
+ */
+public class App
+{
+    public static void main( String[] args )
+    {
+        Thread t=new Thread(new MyRunnable());
+        t.start();
+
+        for (int i = 0; i < 1000; i++) {
+            System.out.println("主线程--->"+i);
+        }
+        //采用匿名内部类创建
+        // Thread t=new Thread(new Runnable() {
+        //     @Override
+        //     public void run() {
+        //         for (int i = 0; i < 1000; i++) {
+        //             System.out.println("分支线程--->"+i);
+        //         }
+        //     }
+        // });
+        // t.start();
+        // for (int i = 0; i < 1000; i++) {
+        //    System.out.println("主线程--->"+i);
+        // }
+    }
+}
+
+```
+***<font color=red>注意</font>***
+
+*一般使用第二种方法 因为一个类实现了接口，还可以继承其他的类，相对来说更加的灵活*
+#### 4.3、获取当前线程对象、获取线程对象名称、修改线程对象名字
+|  方法名   | 作用  |
+|  :----:  | :----:  |
+| static Thread currentThread()  | 获取当前线程对象 |
+| String getName()  | 获取线程对象名字 |
+| void setName(String name)  | 修改线程对象名字 |
+
+_当线程没有设置名字的时候，默认的名字是什么？_
+- Thread-0
+- Thread-1
+- Thread-2
+- Thread-3
+- ...
+
+#### 4.4 关于线程的sleep方法
+|  方法名   | 作用  |
+|  :----:  | :----:  |
+| static void sleep(long millis)  | 让当前线程休眠millis秒 |
+
+1.静态方法 Thread.sleep(1000)
+
+2.参数是**毫秒**
+
+3.让当前线程进入休眠，进入“阻塞状态”，放弃占有CPU时间片，让给其它线程使用
+
+4.Thread.sleep()方法，可以做到这种效果：
+
+间隔特定的时间，去执行一段特定的代码，每隔多久执行一次。
+
+5.使用interrupt()方法中断休眠
+
+``` java
+    public static void main( String[] args ) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+            //休眠一年
+                System.out.println(Thread.currentThread().getName()+"----->begin");
+                try {
+                    Thread.sleep(1000*60*60*24*365);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println(Thread.currentThread().getName()+"----->end");
+            }
+
+        });
+        thread.setName("t");
+        thread.start();
+        //主线程沉睡5s
+        System.out.println("主线程休眠5s");
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        //终止线程休眠
+        thread.interrupt();
+    }
+```
+***<font color=red>为什么run()方法只能try..catch不能throws？</font>***
+
+因为run()方法在父类中没有抛出任何异常，**子类不能比父类抛出更多的异常**。
+
+#### 4.5 终止线程（不推荐使用！！！）
+|  方法名   | 作用  |
+|  :----:  | :----:  |
+| static void stop()  | 终止线程 |
+
+这种方式存在很大的缺点：容易丢失数据。
+
+因为这种方式是直接将线程杀死了，线程没有保存的数据将会丢失。不建议使用。
+***<font color=red>那么如何合理的终止线程呢</font>***
+
+```java
+/**
+ * Hello world!
+ *
+ */
+public class App
+{
+    public static void main( String[] args ) {
+        MyRunable4 r = new MyRunable4();
+        Thread t = new Thread(r);
+        t.setName("t");
+        t.start();
+
+        // 模拟5秒
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        // 终止线程
+        // 你想要什么时候终止t的执行，那么你把标记修改为false，就结束了。
+        r.run = false;
+
+    }
+
+}
+class MyRunable4 implements Runnable {
+
+    // 打一个布尔标记
+    boolean run = true;
+
+    @Override
+    public void run() {
+        for (int i = 0; i < 10; i++){
+            if(run){
+                System.out.println(Thread.currentThread().getName() + "--->" + i);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }else{
+                // return就结束了，你在结束之前还有什么没保存的。
+                // 在这里可以保存呀。
+                //save....
+
+                //终止当前线程
+                return;
+            }
+        }
+    }
+}
+```
+
+#### 4.6 补充小知识：线程调度（了解）
+1.常见的线程调度模型有哪些？
+
+- 抢占式调度模型：
+
+    那个线程的优先级比较高，抢到的CPU时间片的概率就高一些/多一些。
+
+    java采用的就是抢占式调度模型。
+
+- 均分式调度模型：
+
+    平均分配CPU时间片。每个线程占有的CPU时间片时间长度一样。
+
+    平均分配，一切平等。
+
+    有一些编程语言，线程调度模型采用的是这种方式。
+
+#### 4.7 java中提供了哪些方法是和线程调度有关系的呢？
+##### 4.7.1 实例方法
+|  方法名   | 作用  |
+|  :----:  | :----:  |
+| int getPriority()  | 获得线程优先级 |
+| void setPriority(int newPriority)  | 设置线程优先级 |
+
+- 最低优先级1
+- 默认优先级是5
+- 最高优先级10
+
+优先级比较高的获取CPU时间片可能会多一些。（但也不完全是，大概率是多的。）
+
+##### 4.7.2 静态方法
+|  方法名   | 作用  |
+|  :----:  | :----:  |
+| static void yield()  | 让位方法，当前线程暂停，回到就绪状态，让给其它线程。 |
+
+yield()方法不是阻塞方法。让当前线程让位，让给其它线程使用。
+
+yield()方法的执行会让当前线程从“运行状态”回到“就绪状态”。
+
+***<font color=red>注意：在回到就绪之后，有可能还会再次抢到。</font>***
+
+##### 4.7.2 实例方法
+|  方法名   | 作用  |
+|  :----:  | :----:  |
+| void join()  | 将一个线程合并到当前线程中，当前线程受阻塞，加入的线程执行直到结束 |
+| void join(long millis)  | 接上条，等待该线程终止的时间最长为 millis 毫秒 |
+| void join(long millis, int nanos)  | 接第一条，等待该线程终止的时间最长为 millis 毫秒 + nanos 纳秒 |
+
+``` java
+class MyThread1 extends Thread {
+	public void doSome(){
+		MyThread2 t = new MyThread2();
+		t.join(); // 当前线程进入阻塞，t线程执行，直到t线程结束。当前线程才可以继续。
+	}
+}
+
+class MyThread2 extends Thread{
+
+}
+```
+
+#### 5.多线程并发情况下 数据的重要性
+
+**什么时候数据在多线程并发的环境下会存在安全问题呢**🔥🔥🔥🔥
+满足三个条件：
+
+- 条件1：多线程并发。
+- 条件2：有共享数据。
+- 条件3：共享数据有修改的行为。
+
+满足以上3个条件之后，就会存在线程安全问题。
+
+**怎么解决线程安全问题呢？**
+同步策略 就是一个线程一个线程排队不能并发 但是效率会降低
+异步策略 每个线程依次做自己的事情 效率高
+#### 6. 线程安全
