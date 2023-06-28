@@ -1,7 +1,7 @@
 ---
 title: java中excel的导入导出
 date: 2022-06-26 15:54:05
-categories: Sql
+categories: Java
 ---
 
 ## 1.环境准备
@@ -1046,7 +1046,7 @@ public class ExcelUtils {
 ```
 
 ExcelImport
-``` bash
+``` java
 package com.faith.util.excel;
 
 import java.lang.annotation.ElementType;
@@ -1081,7 +1081,7 @@ public @interface ExcelImport {
 ```
 
 ExcelExport
-``` bash
+``` java
 package com.faith.util.excel;
 
 import java.lang.annotation.ElementType;
@@ -1114,7 +1114,7 @@ public @interface ExcelExport {
 ```
 
 ExcelClassField
-``` bash
+``` java
 package com.faith.util.excel;
 
 /**
