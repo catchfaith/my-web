@@ -1,5 +1,5 @@
 ---
-title: 复习java中的多线程...
+title: 复习java中的多线程
 date: 2022-06-27 10:33:05
 categories: Java
 ---
