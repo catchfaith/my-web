@@ -485,7 +485,7 @@ Elasticsearch提供了基于JSON的DSL来定义查询。常用的查询类型包
   - bool
   - function_score
 #### 4.3.2 **DSL QUERY基本语法**
-查询的基本语法如下：
+1. **查询的基本语法如下：**
 ```java
 GET /indexName/_search
 {
@@ -496,3 +496,141 @@ GET /indexName/_search
   }
 }
 ```
+2. **全文索引查询**
+match查询：全文索引查询的一种，会对用户输入内容分词 然后去倒排索引库检索
+``` java
+GET /goods/_search
+{
+  "query": {
+    "match": {
+      "FIEID": "Text"
+    }
+  }
+}
+```
+multi_match:与match类似，只不过允许同时查询多个字段，之前的copyto和这个就是类似的，推荐使用copyto方法，因为在检索的时候多个字段的话会性能相对低一些
+
+语法：
+``` json
+GET /goods/_search
+{
+  "query": {
+    "multi_match": {
+      "query": "Text",
+      "fields": ["field1","field2"]
+    }
+  }
+}
+```
+2. **精确查询**
+精确查询一般是查找keyword、数值、日期、boolean类型字段。所以不会对搜索条件分词。常见的有
+- term：根据词条精确值查询
+- range： 根据值的范围查询
+
+term：
+``` json
+GET /goods/_search
+{
+  "query": {
+   "term": {
+     "FIELD": {
+       "value": "VALUE"
+     }
+   }
+  }
+}
+```
+range:
+``` json
+## 范围查询 查询商品价格10-15的
+GET /goods/_search
+{
+  "query": {
+ "range": {
+   "price": {
+     "gte": 10,
+     "lte": 15
+   }
+ }
+  }
+}
+```
+
+3. **地理查询**
+``` json
+# distance 查询
+GET /goods/_search
+{
+  "query": {
+     "geo_distance":{
+       "distance":"15km",
+       "Field":"32.21,121.5"
+     }
+  }
+}
+```
+3. **复合查询**
+复合查询：复合查询可以将其他简单查询组合起来，实现更复杂的搜索逻辑，例如：
+- fuction score:算分函数查询，可以控制文档相对性算分，控制文档排名。例如百度竞价
+
+``` java
+#标题沈从文
+#几个不高于50的
+GET /goods/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "match": {
+            "title": "沈从文"
+          }
+        }
+      ],
+      "must_not":
+      [
+        {
+          "range": {
+            "price": {
+              "gte": 50
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+- 排序
+``` json
+#价格排序
+GET /goods/_search
+{
+  "query": {
+    "match_all": {
+    }
+  },
+  "sort": [
+    {
+      "price": "desc"
+    }
+  ]
+  
+}
+```
+- 分页
+
+from和size好比mysql limit的两个参数
+
+``` json
+GET /goods/_search
+{
+  "query": {
+    "match_all": {
+    }
+  },
+  "from": 20,
+  "size": 20
+}
+```
+
