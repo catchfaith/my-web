@@ -375,7 +375,7 @@ class Node{
 6.后序遍历：先左树，再右树再父节点
 这里可以看父节点树的位置来判断
 
-使用CSharp 对于这里的各种顺序的遍历 
+使用CSharp 对于这里的各种顺序的遍历 查找删除
 ``` C# 
 // See https://aka.ms/new-console-template for more information
 
@@ -413,6 +413,7 @@ namespace faithApp
            node2.rightNode = node3;
            Tree tree = new Tree();
            tree.node = node;
+           
            //前序
            Console.WriteLine("前序遍历");
            tree.frontDisplay();
@@ -420,6 +421,20 @@ namespace faithApp
            tree.midDisplay();
            Console.WriteLine("后序遍历");
            tree.behindDisplay();
+           
+           //前序找个5
+           var find = tree.frontFind(5);
+           Console.WriteLine("前序查找找到的节点为：" + find);
+           var midFind = tree.midFind(5);
+           Console.WriteLine("中序查找找到的节点为：" + midFind);
+           var behindFind = tree.behindFind(5);
+           Console.WriteLine("后序查找找到的节点为：" + behindFind);
+           
+           //delete 5
+           Console.WriteLine("start delete ");
+           tree.deleteNode(5);
+           //select all list
+           tree.frontDisplay();
            Console.ReadKey();
         }
     }
@@ -427,6 +442,46 @@ namespace faithApp
     class Tree
     {
         public Node node { get; set; }
+
+        //查找前序
+        public Node frontFind(int val)
+        {
+            if (this.node != null)
+            {
+                return this.node.frontFind(val);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        //查找中序
+        public Node midFind(int val)
+        {
+            if (this.node != null)
+            {
+                return this.node.midFind(val);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        //查找后序
+        public Node behindFind(int val)
+        {
+            if (this.node != null)
+            {
+                return this.node.behindFind(val);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         //前序
         public void frontDisplay()
         {
@@ -439,6 +494,7 @@ namespace faithApp
                 Console.WriteLine("二叉树为null");
             }
         }
+
         //中序
         public void midDisplay()
         {
@@ -451,6 +507,7 @@ namespace faithApp
                 Console.WriteLine("二叉树为null");
             }
         }
+
         //后序
         public void behindDisplay()
         {
@@ -463,10 +520,33 @@ namespace faithApp
                 Console.WriteLine("二叉树为null");
             }
         }
-        
+
+        public void deleteNode(int val)
+        {
+            if (this.node != null)
+            {
+                if (this.node.val == val)
+                {
+                    this.node= null;
+                    return;
+                }
+                node.deleteNode(val);
+            }
+            else
+            {
+                Console.WriteLine("tree is null");
+            }
+
+           
+        }
     }
+
     class  Node
     {
+        public Node()
+        {
+        }
+
         public Node(int val)
         {
             this.val = val;
@@ -480,6 +560,87 @@ namespace faithApp
             return $"节点权为：{val}";
         }
 
+        //前序查找 父---左---右
+        public Node frontFind(int val)
+        {
+            Console.WriteLine("进入前序查找！！！！！！！！！！！！！！！");
+            //前查询思路
+            if (this.val == val)
+            {
+                return this;
+            }
+
+            Node node = null;
+            if (this.leftNode != null)
+            {
+                node =  this.leftNode.frontFind(val);
+            }
+
+            if (node != null)
+            {
+                return node;
+            }
+
+            if (this.rightNode != null)
+            {
+                node =  this.rightNode.frontFind(val);
+            }
+            return node;
+        }
+        //中序查找 左---父---右
+        public Node midFind(int val)
+        {
+            Console.WriteLine("进入中序查找！！！！！！！！！！！！！！！");
+            Node node = null;
+            if (this.leftNode != null)
+            {
+                node =  this.leftNode.frontFind(val);
+            }
+            
+            if (node != null)
+            {
+                return node;
+            }
+            
+            if (this.val == val)
+            {
+                return this;
+            }
+            
+            if (this.rightNode != null)
+            {
+                node =  this.rightNode.frontFind(val);
+            }
+            return node;
+        }
+        //中序查找 左---右---父亲
+        public Node behindFind(int val)
+        {
+            Console.WriteLine("进入后序查找！！！！！！！！！！！！！！！");
+            Node node = null;
+            if (this.leftNode != null)
+            {
+                node =  this.leftNode.frontFind(val);
+            }
+            
+            if (node != null)
+            {
+                return node;
+            }
+            if (this.rightNode != null)
+            {
+                node =  this.rightNode.frontFind(val);
+            }
+            if (node != null)
+            {
+                return node;
+            }
+            if (this.val == val)
+            {
+                return this;
+            }
+            return node;
+        }
         //前序
         public void frontDisplay()
         {
@@ -526,7 +687,41 @@ namespace faithApp
             
             Console.WriteLine(this.ToString());
         }
+        
+        //删除节点
+        public void deleteNode(int val)
+        {
+            //左子节点不为null 并且值符合 将子节点为null 返回
+            if (this.leftNode !=null && this.leftNode.val == val)
+            {
+                this.leftNode = null;
+                return;
+            }
+            //右子节点不为null 并且值符合 将子节点为null 返回
+            if (this.rightNode != null && this.rightNode.val == val)
+            {
+                this.rightNode = null;
+                return;
+            }
+            //值不符合 左递归查
+            if (this.leftNode != null)
+            {
+                this.leftNode.deleteNode(val);
+            }
+            //值不符合 右递归查
+            if (this.rightNode != null)
+            {
+                this.rightNode.deleteNode(val);
+            }
+        }
     }
 }
+
 ```
 
+#### 4.3 顺序存储二叉树
+二叉树可以和一个有序数组进行转换 前提是这个二叉数组是完全二叉树
+1.第n个元素的左子节点为2*n+1
+2.第n个元素的右子节点为2*n+2
+3.第n个元素的父节点（n-1）/2
+这里的n表示二叉树中的第几个元素（从0开始）
